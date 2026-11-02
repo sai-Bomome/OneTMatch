@@ -1,0 +1,1 @@
+{"name":"onet-match-workbench","private":true,"type":"module","scripts":{"test":"node --test tests/*.test.mjs","icons":"python tools/icon_catalog.py"}}
