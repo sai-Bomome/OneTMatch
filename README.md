@@ -50,3 +50,19 @@ Selection clears when clicking any non-tile area or control, selecting the same 
 Drop transparent PNG, SVG or WebP files into `icons/<Pack name>/`. See `icons/README.md`. Click **Refresh icon folders**, select the icon set, then generate a new deal. Icons are tinted using the existing palette so color variants remain distinguishable. The current deal keeps its icon set until you generate another. The type cap adjusts to the pack's unique shape/color combinations (up to 640).
 
 For static hosting, run `npm run icons` (or `python tools/icon_catalog.py`) and commit the generated catalog with the images. Local hosting discovers packs on refresh. No image upload service is needed; files live in the repository.
+
+Path animation selector: **Draw, then shrink** draws one solid line from the first tile edge to the second, removes the first tile, then erases the line from the first end toward the second before removing the second tile. **Two-pass overlay** retains the earlier animation and reverse-overlay toggle. Both use actual measured tile-face edge endpoints, including outside-board routes. State removal and exposure feedback commit together after the visual sequence, keeping undo and move checks atomic.
+
+**Constant path speed** toggles between the original fixed durations (off, default) and actual rendered path-length timing (on). Speed mode uses 700 px/s for drawing, 1300 px/s for the overlay and 950 px/s for shrinking, including outside-board segments and excluding the clipped endpoint interiors. It applies to both animation alternatives, persists, and is latched per match. Tile fades and inter-pass pauses retain their own durations.
+
+**Tile spawn animation** offers Pop wave, Soft drop, Flip reveal and Off. New boards/replays reveal tiles with a diagonal stagger; shuffles use a quicker version. Input stays locked until the reveal finishes. The setting persists and reduced-motion preferences show tiles immediately. Spawn keyframes/delays live in `feedback.mjs`.
+
+Path speed tuning: fixed drawing/overlay/shrink durations are now 280/145/210 ms; constant-speed rates are 1050/1950/1425 px/s respectively (about 1.5 times faster). Overlay pause/hold are 30/80 ms.
+
+Paths have a small bright circular head that travels along the connection. The shrink alternative starts a head at the first end when shrinking begins; the two-pass alternative gives the overlay its own head following the selected direction. Reduced-motion mode hides moving heads.
+
+Path speed (0.25x-3x) and head size (50%-250%) sliders are in Display & play. Both are saved locally and apply to the next match. Speed affects drawing, overlay and shrinking in both timing modes.
+
+Tile reveal direction controls the stagger separately from the spawn style: center/edges, inward/outward spirals, horizontal, vertical, and four diagonals. Saved locally; applies to new boards, replay and shuffle.
+
+After a successful match leaves three or fewer pairs, remaining legal pairs auto-clear sequentially with the selected path animation. Blocked pairs remain; each automatic match can be undone.
