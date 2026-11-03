@@ -7,3 +7,8 @@ test('custom icons have distinct colored identities and valid markup',()=>{
  assert(iconMarkup(1,images).includes('cat.svg'));assert(iconMarkup(2,images).includes('dog.png'));assert.throws(()=>iconVisual(33,images));
  assert.equal(iconTypeLimit(),640);assert(iconMarkup(1).includes('<svg'));assert(iconMarkup(1,['icons/X/a"b.svg']).includes('&quot;'));
 });
+
+import {iconDescription} from '../icons.mjs';
+test('accessible identities include color as well as shape',()=>{
+ assert.notEqual(iconDescription(1),iconDescription(41));assert(iconDescription(1).includes('rose'));assert(iconDescription(1,['icons/Test/cat.svg']).includes('Custom icon 1'));
+});

@@ -11,3 +11,6 @@ export function iconMarkup(type,images=[]){
  const {shapeIndex}=iconVisual(type,images),url=images[shapeIndex].replace(/[&"'<>]/g,c=>({'&':'&amp;','"':'&quot;',"'":'&#39;','<':'&lt;','>':'&gt;'}[c]));
  return `<span class="custom-icon" style="--icon-url:url(&quot;${url}&quot;)" aria-hidden="true"></span>`;
 }
+
+export const COLOR_NAMES=['rose','lavender','teal','gold','blue','pink','lime','peach','aqua','lilac','dusty rose','slate blue','ochre','sage','orchid','taupe'];
+export function iconDescription(type,images=[]){const visual=iconVisual(type,images);return `${COLOR_NAMES[visual.colorIndex]} ${visual.name}`;}

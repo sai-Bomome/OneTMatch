@@ -65,3 +65,52 @@
 #rulesDialog form{text-align:center;margin-top:20px}
 @keyframes rules-enter{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:420px){#rulesDialog{padding:20px 14px}.header-actions{gap:5px}.header-actions button{padding:9px}}
+
+/* Game-feel test: planted hit targets, animated visual children. */
+.board>.tile,.board>.tile:hover:not(:disabled),.board>.tile.selected,.board>.tile.removing{transform:none;animation:none}
+.tile{transition:background .12s,box-shadow .12s,opacity var(--remove-time,130ms);touch-action:manipulation}
+.tile-face{position:absolute;inset:0;display:grid;place-items:center;border-radius:inherit;pointer-events:none;transition:transform 90ms ease-out}
+.tile:active:not(:disabled) .tile-face{transform:scale(.93)}
+.tile.selected .tile-face{transform:scale(1.045)}
+.tile.selected:active:not(:disabled) .tile-face{transform:scale(.97)}
+.tile.removing .tile-face{transform:scale(.68);transition:transform var(--remove-time,130ms) ease-in}
+.tile.hinted .tile-face{animation:hint-icon 1s ease-in-out infinite}
+.tile.selected{box-shadow:0 3px 0 #c9b6e0,0 0 0 2px #b995ec;outline:2px solid #b995ec;outline-offset:1px}
+.tile.queued{outline-style:dashed}
+.tile.matched{pointer-events:none;outline:2px solid #b995ec;outline-offset:-3px}
+.tile.enclosed .glyph{opacity:.83}
+.tile.enclosed{background:#e4dcec;border-color:#cfc3dd;box-shadow:0 3px 0 #b9accb}
+.dark .tile.enclosed{background:#3a3149;border-color:#4c405e;box-shadow:0 3px 0 #191321}
+.tile.denied-identity{outline:2px solid #d9788e;outline-offset:-3px}
+.tile.denied-blocked{outline:2px dashed #d8ab62;outline-offset:-3px}
+button:active:not(:disabled):not(.tile){transform:scale(.97)}
+.cover{overflow:hidden}.cover>span{display:block}.cover h2,.cover p{animation:result-arrive 260ms ease-out both}
+.cover p{animation-delay:65ms}.cover button{position:relative;z-index:1}
+@keyframes hint-icon{50%{transform:scale(1.065)}}
+@keyframes result-arrive{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:680px){.header-actions{flex-wrap:wrap;justify-content:flex-end;gap:5px}header{gap:10px}}
+@media(prefers-reduced-motion:reduce){.tile-face,.tile,.cover{transition:none!important;animation:none!important}}
+
+.cover.completed>span{position:relative;color:#ad80ed}
+.cover.completed>span::before,.cover.completed>span::after{content:'+';position:absolute;font-size:19px;opacity:0;color:#d0a8ff;animation:completion-glint 480ms ease-out 120ms both}
+.cover.completed>span::before{left:-28px;top:3px}.cover.completed>span::after{right:-27px;bottom:4px;animation-delay:230ms}
+@keyframes completion-glint{0%{opacity:0;transform:scale(.5) rotate(-25deg)}45%{opacity:1}100%{opacity:0;transform:scale(1.2) rotate(30deg)}}
+@media(prefers-reduced-motion:reduce){.cover.completed>span::before,.cover.completed>span::after{display:none}}
+
+/* The compact rules card has its own right-hand column. */
+main{grid-template-columns:240px minmax(0,1fr) 220px;max-width:1680px;gap:24px;align-items:start}
+.guide-sidebar{min-width:0}.guide-sidebar .rules{margin-bottom:0}
+@media(max-width:1100px){
+ main{grid-template-columns:220px minmax(0,1fr);gap:18px}
+ main>aside:first-child{grid-column:1;grid-row:1/span 2}
+ .workspace{grid-column:2;grid-row:1}.guide-sidebar{grid-column:2;grid-row:2}
+}
+@media(max-width:680px){
+ main{display:flex;flex-direction:column}.workspace{order:0;width:100%}
+ main>aside:first-child{order:2;width:100%}.guide-sidebar{order:1;width:100%;display:block}
+}
+
+/* Exposure is real already; retain its enclosed presentation until the icon settles. */
+.tile.unlocking,.tile.unlocking:hover:not(:disabled){background:#e4dcec;border-color:#cfc3dd;box-shadow:0 3px 0 #b9accb}
+.dark .tile.unlocking,.dark .tile.unlocking:hover:not(:disabled){background:#3a3149;border-color:#4c405e;box-shadow:0 3px 0 #191321}
+.tile.unlocking .glyph{opacity:.83}

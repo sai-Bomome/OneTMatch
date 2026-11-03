@@ -10,7 +10,7 @@ Double-click `Start.cmd`, or run `python server.py` then open http://127.0.0.1:5
 
 Match identical shape-and-color types along an empty orthogonal path of at most two turns. A one-cell outside lane is allowed. Tiles stay in place after a match. Clear the board to win. This implements classic mechanics, not an exact reproduction of a particular appâ€™s artwork, progression or economy.
 
-Build controls: deterministic seed, rows/columns (6â€“12), and 2â€“16 tile types. Each deal is constructed from a geometric removal certificate and replay-verified before publication. The recorded sequence is one solution, not a unique or minimum solution. Smaller type pools can create alternative pairings; player routes may get stuck. Hint reveals a legal pair; Shuffle rebuilds remaining occupied slots and preserves exact per-type counts with a new verified clearing sequence. Failed shuffle attempts leave the board intact. Undo restores the previous match or shuffle; Replay returns to the original deal. Solution step uses a surviving recorded move, falling back to an available legal pair after divergent play; it is not an exact solver for arbitrary player states.
+Build controls: deterministic seed, rows/columns (6â€“12), and 2–640 tile types. Each deal is constructed from a geometric removal certificate and replay-verified before publication. The recorded sequence is one solution, not a unique or minimum solution. Smaller type pools can create alternative pairings; player routes may get stuck. Hint reveals a legal pair; Shuffle rebuilds remaining occupied slots and preserves exact per-type counts with a new verified clearing sequence. Failed shuffle attempts leave the board intact. Undo restores the previous match or shuffle; Replay returns to the original deal. Solution step uses a surviving recorded move, falling back to an available legal pair after divergent play; it is not an exact solver for arbitrary player states.
 
 Timer counts elapsed active play (pauses excluded); no countdown loss or score economy. All tools are unlimited for experimentation. Optional auto-shuffle is off by default. Display settings persist in browser local storage; JSON export is explicit. No accounts, analytics, third-party assets, dependencies or network services.
 
@@ -18,7 +18,9 @@ Timer counts elapsed active play (pauses excluded); no countdown loss or score e
 
 - `shapes.mjs`: 40 clean SVG silhouettes redrawn from the supplied references, in sheet order. Matching uses the type ID; Each shape has 16 color variants, producing 640 distinct shape/color identities. Both must match.
 - `engine.mjs`: deterministic RNG, path finding, move enumeration, board construction, certificate replay.
-- `app.mjs`: session state, history, feedback, tools, preference storage and export.
+- `app.mjs`: composition, session state/history, persistent grid UI, tools, preferences and export.
+- `session.mjs`: immutable match transaction, bounded endgame selection and keyboard navigation.
+- `presentation.mjs`: cancellable waits/animations and optional bounded synthesized audio.
 - `index.html`, `style.css`: authored responsive lavender UI, primitives and connection overlay.
 - `server.py`, `Start.ps1`, `Start.cmd`: local static hosting.
 - `tests/engine.test.mjs`: path and generation regressions.
@@ -34,16 +36,23 @@ Spread-pair generation prefers geometrically separated partners over eight-neigh
 
 Tiles with no exposed orthogonal edge are shaded. Board boundaries count as open edges; diagonal vacancies do not. Exposure updates after matches, shuffle and undo. Shading is visual only and does not disable valid adjacent-pair matches.
 
-## Connection feedback
-When an enclosed tile gains its first open orthogonal edge, its icon rises/scales up, rotates through 360 degrees, then settles (560 ms). Already-exposed tiles do not retrigger on selection or hint changes. Initial board exposure establishes a baseline rather than flipping all edge tiles. Borders count as open; diagonals do not.
+## Game feel and feedback
 
-Successful matches trace from the first selected tile to the second (340 ms), then a faster warm overlay follows the path (130 ms). **Reverse overlay trace** switches the second pass to second-to-first; the first trace always follows tap order. Removal follows both traces. Settings persist, and reduced-motion preferences suppress tossing and tracing motion. Timings/keyframes live in `feedback.mjs`; matching CSS trace durations correspond in `style.css`.
+See [GAME_FEEL.md](GAME_FEEL.md) for the feedback ownership, tuning values, and acceptance checks.
 
-Connection traces render behind tile faces, so visible lines emerge at tile edges and do not cross the icons. Both trace passes share this layer.
+Matches commit immediately to rules state. A separate cancellable visual sequence preserves the outgoing tiles and connection until their animation completes. During that sequence you can select the next tile; it keeps a dashed selection outline, and its partner can be selected after the current connection settles. Undo, Pause, Replay and New board safely interrupt presentation. Selection, disabled state, focus and hints update without replacing the grid buttons.
 
-Path visibility refinement: the first trace is muted lavender (420 ms); after a 50 ms beat, a wider bright-violet overlay traces in 220 ms and holds for 130 ms before tile removal. Disabled tile input no longer applies the generic button-opacity fade during matching; enclosed-tile shading is retained. Both passes remain behind tiles. Trace durations are supplied by `feedback.mjs` through SVG CSS variables.
+Arrow keys navigate occupied tiles without wrapping rows; Home/End move to the first/last occupied tile. Enter/Space selects, Escape clears selection. Tile labels include color and shape. Enclosed tiles remain shaded but are readable and selectable: adjacent matching tiles may still connect even without an open edge.
 
-Selection clears when clicking any non-tile area or control, selecting the same tile again, or attempting a mismatched/blocked pair. Outside clicks and deselection do not cost a wrong-move attempt. A second valid tile still completes a normal match.
+Newly exposed icons use a restrained 360-degree flip (360 ms, reduced to 288 ms when more than three are exposed together). Initial exposure, shuffle and undo establish a baseline. Invalid pairs mark both endpoints with solid or dashed outlines to distinguish mismatches from blocked routes and emphasize the remaining-tries counter.
+
+Draw, then shrink uses one solid violet connection; the first tile fades as shrinking starts, then the second fades on arrival. Two-pass overlay uses a muted first trace and brighter second trace, with optional reverse direction. Paths and their solid circular heads begin/end at tile edges and stay behind tiles. The 130 ms removal timing is shared by CSS and the sequence; the first removal overlaps shrinking.
+
+Path speed (0.25x-3x), head size (50%-250%), constant-speed mode, both path styles, and all reveal directions remain available. Spawn styles are Pop wave, Soft drop, Flip reveal and Off. Reveals use 360 ms motion plus up to 320 ms stagger; shuffle uses 260 ms plus 180 ms. First-time visitors see the rules before the board reveal starts.
+
+Sound cues are optional and off by default, with a saved volume control. The browser synthesizes short selection, match, denial and completion cues after an interaction unlocks audio; no external assets/packages are required. Silence or unavailable audio never affects the rules. Reduced-motion preferences suppress travel, tossing, glints and feedback delays.
+
+The final three or fewer pairs clear automatically when legal routes exist. The tiny endgame search prefers a complete clearing continuation when available. Selecting another tile interrupts the automatic handoff; blocked pairs remain for player action. Completion uses a short local accent, summary, and immediately usable Next board control. Pause/result covers animate in and out.
 
 ## Add your own icons
 
@@ -51,22 +60,8 @@ Drop transparent PNG, SVG or WebP files into `icons/<Pack name>/`. See `icons/RE
 
 For static hosting, run `npm run icons` (or `python tools/icon_catalog.py`) and commit the generated catalog with the images. Local hosting discovers packs on refresh. No image upload service is needed; files live in the repository.
 
-Path animation selector: **Draw, then shrink** draws one solid line from the first tile edge to the second, removes the first tile, then erases the line from the first end toward the second before removing the second tile. **Two-pass overlay** retains the earlier animation and reverse-overlay toggle. Both use actual measured tile-face edge endpoints, including outside-board routes. State removal and exposure feedback commit together after the visual sequence, keeping undo and move checks atomic.
+Default settings: seed 1083, 8x8, 30 colored primitive types, 5 wrong moves, advance seed on. Pop wave with center-to-edges reveal, draw-then-shrink path, 2.5x speed, 90% head size, constant speed on, Evening Garden. Type numbers, reverse overlay, auto-shuffle and sound off. Existing saved browser preferences take precedence.
 
-**Constant path speed** toggles between the original fixed durations (off, default) and actual rendered path-length timing (on). Speed mode uses 700 px/s for drawing, 1300 px/s for the overlay and 950 px/s for shrinking, including outside-board segments and excluding the clipped endpoint interiors. It applies to both animation alternatives, persists, and is latched per match. Tile fades and inter-pass pauses retain their own durations.
+First-time visitors see a rules dialog with 0/1/2-turn examples. Dismissal is remembered locally; How to play reopens it. The play timer stops while the dialog is open, while paused, and after finishing. Backgrounding active play pauses the board.
 
-**Tile spawn animation** offers Pop wave, Soft drop, Flip reveal and Off. New boards/replays reveal tiles with a diagonal stagger; shuffles use a quicker version. Input stays locked until the reveal finishes. The setting persists and reduced-motion preferences show tiles immediately. Spawn keyframes/delays live in `feedback.mjs`.
-
-Path speed tuning: fixed drawing/overlay/shrink durations are now 280/145/210 ms; constant-speed rates are 1050/1950/1425 px/s respectively (about 1.5 times faster). Overlay pause/hold are 30/80 ms.
-
-Paths have a small bright circular head that travels along the connection. The shrink alternative starts a head at the first end when shrinking begins; the two-pass alternative gives the overlay its own head following the selected direction. Reduced-motion mode hides moving heads.
-
-Path speed (0.25x-3x) and head size (50%-250%) sliders are in Display & play. Both are saved locally and apply to the next match. Speed affects drawing, overlay and shrinking in both timing modes.
-
-Tile reveal direction controls the stagger separately from the spawn style: center/edges, inward/outward spirals, horizontal, vertical, and four diagonals. Saved locally; applies to new boards, replay and shuffle.
-
-After a successful match leaves three or fewer pairs, remaining legal pairs auto-clear sequentially with the selected path animation. Blocked pairs remain; each automatic match can be undone.
-
-Default settings: seed 1083, 8x8, 30 colored primitive types, 5 wrong moves, advance seed on. Pop wave with center-to-edges reveal, draw-then-shrink path, 2.5x speed, 90% head size, constant speed on, Evening Garden. Type numbers, reverse overlay, and auto-shuffle off. Existing saved browser preferences take precedence.
-
-First-time visitors see a rules dialog with 0/1/2-turn connection examples. Dismissal is remembered locally; How to play reopens it. The play timer stops while the dialog is open.
+Newly free tiles retain the enclosed gray background while their icon rotates 360 degrees, shrinks to 50% and grows back to full size. Only after the icon settles does the background transition to its free appearance. Timing remains `FEEDBACK.flipMs`; reduced motion settles immediately.

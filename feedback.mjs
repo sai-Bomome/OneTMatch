@@ -1,5 +1,5 @@
 import {hasOpenEdge} from './engine.mjs';
-export const FEEDBACK={flipMs:560,firstTraceMs:280,overlayTraceMs:145,overlayDelayMs:30,overlayHoldMs:80,shrinkMs:210,removeMs:160,drawPixelsPerSecond:1050,overlayPixelsPerSecond:1950,shrinkPixelsPerSecond:1425};
+export const FEEDBACK={flipMs:360,invalidMs:240,firstTraceMs:280,overlayTraceMs:145,overlayDelayMs:30,overlayHoldMs:80,shrinkMs:210,removeMs:130,drawPixelsPerSecond:1050,overlayPixelsPerSecond:1950,shrinkPixelsPerSecond:1425};
 export function exposedTiles(cells,cols,rows){return new Set(cells.map((v,i)=>v&&hasOpenEdge(cells,cols,rows,i)?i:-1).filter(i=>i>=0));}
 export function newlyExposed(previous,current){return previous?[...current].filter(i=>!previous.has(i)):[];}
 export function edgePath(points,startInset=[.46,.46],endInset=[.46,.46]){
@@ -28,11 +28,11 @@ export function connectionMarkup(points,cols,rows,{matching=false,reverse=false,
  return `<svg style="--first-trace:${timing.firstTraceMs}ms;--overlay-trace:${timing.overlayTraceMs}ms;--shrink-trace:${timing.shrinkMs}ms" class="route ${matching?mode==='shrink'?'single-route':'matching-route':'hint-route'}" viewBox="0 0 ${cols+2} ${rows+2}" preserveAspectRatio="none" aria-hidden="true">${base}${overlay}${heads}</svg>`;
 }
 export const FLIP_KEYS=[
- {transform:'translateY(0) scale(1) rotateY(0deg)',offset:0},
- {transform:'translateY(-8px) scale(1.22) rotateY(110deg)',offset:.3},
- {transform:'translateY(-13px) scale(1.32) rotateY(210deg)',offset:.52},
- {transform:'translateY(-4px) scale(1.12) rotateY(335deg)',offset:.82},
- {transform:'translateY(0) scale(1) rotateY(360deg)',offset:1}
+ {transform:'scale(1) rotateY(0deg)',offset:0},
+ {transform:'scale(.52) rotateY(150deg)',offset:.4},
+ {transform:'scale(.5) rotateY(200deg)',offset:.55},
+ {transform:'scale(.8) rotateY(300deg)',offset:.8},
+ {transform:'scale(1) rotateY(360deg)',offset:1}
 ];
 
 export function spawnKeyframes(style){
@@ -70,3 +70,17 @@ export function spawnDelays(cols,rows,spread=460,direction='diagonal-tl'){
  return scores.map(score=>range?(score-min)/range*spread:0);
 }
 export function spawnDelay(index,cols,rows,spread=460,direction='diagonal-tl'){return spawnDelays(cols,rows,spread,direction)[index];}
+
+export const INVALID_KEYS=[
+ {transform:'translateX(0)'},
+ {transform:'translateX(-4px)',offset:.18},
+ {transform:'translateX(4px)',offset:.38},
+ {transform:'translateX(-3px)',offset:.58},
+ {transform:'translateX(2px)',offset:.78},
+ {transform:'translateX(0)'}
+];
+
+// Rules can expose a tile before the blocker-removal presentation finishes.
+export function isVisuallyEnclosed(cells,cols,rows,index,shownExposure,holdNewExposure){
+ return !!cells[index]&&(!hasOpenEdge(cells,cols,rows,index)||!!(holdNewExposure&&shownExposure&&!shownExposure.has(index)));
+}

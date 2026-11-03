@@ -47,3 +47,23 @@ test('reveal directions traverse rectangular boards and reverse consistently',()
  assert.equal(new Set(spawnDelays(8,6,460,'spiral-in')).size,48);
  assert(spawnDelays(5,5,460,'in-out')[12]<spawnDelays(5,5,460,'in-out')[0]);
 });
+
+import {INVALID_KEYS} from '../feedback.mjs';
+test('invalid-pair vibration settles back without changing target positions',()=>{
+ assert.equal(INVALID_KEYS[0].transform,'translateX(0)');assert.equal(INVALID_KEYS.at(-1).transform,'translateX(0)');assert(INVALID_KEYS.some(frame=>frame.transform.includes('-4px')));assert(INVALID_KEYS.some(frame=>frame.transform==='translateX(4px)'));assert(FEEDBACK.invalidMs<=300);
+});
+
+test('unlock icon shrinks to half size and returns to its original orientation at full size',()=>{
+ assert.equal(FLIP_KEYS[0].transform,'scale(1) rotateY(0deg)');assert(FLIP_KEYS.some(frame=>frame.transform.includes('scale(.5)')));assert.equal(FLIP_KEYS.at(-1).transform,'scale(1) rotateY(360deg)');
+});
+
+import {isVisuallyEnclosed} from '../feedback.mjs';
+test('newly exposed tile stays gray throughout blocker removal, before unlock starts',()=>{
+ const cells=Array(36).fill(1),before=exposedTiles(cells,6,6);
+ assert(isVisuallyEnclosed(cells,6,6,14,before,false));
+ cells[13]=0;assert(exposedTiles(cells,6,6).has(14));
+ assert(isVisuallyEnclosed(cells,6,6,14,before,true));
+ assert(!isVisuallyEnclosed(cells,6,6,14,before,false));
+ assert(!isVisuallyEnclosed(cells,6,6,0,before,true));
+ assert(!isVisuallyEnclosed(cells,6,6,13,before,true));
+});
