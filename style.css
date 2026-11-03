@@ -48,3 +48,20 @@
 .dark .primary:hover:not(:disabled){background:#7046ba}
 
 @keyframes head-appear{from{opacity:0}to{opacity:1}}
+
+#rulesDialog{width:min(620px,calc(100% - 28px));max-height:90vh;overflow:auto;border:1px solid var(--line);border-radius:24px;padding:28px;background:var(--panel);color:var(--ink);box-shadow:0 22px 80px #0005}
+#rulesDialog::backdrop{background:#17112199;backdrop-filter:blur(4px)}
+#rulesDialog[open]{animation:rules-enter .22s ease-out}
+#rulesDialog h2{text-align:center;margin:0 0 18px;font-size:26px}
+#rulesDialog p{text-align:center;font-size:14px;line-height:1.6;color:var(--muted)}
+#rulesDialog strong{color:var(--ink)}
+.rule-examples{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:22px 0}
+.rule-example{background:var(--surface);border-radius:14px;text-align:center;padding:12px 5px}
+.rule-example h3{font-size:14px;margin:0}.rule-example svg{width:100%;display:block;margin:10px 0}
+.rule-example path{fill:none;stroke:#a56aff;stroke-width:7;stroke-linejoin:round;stroke-linecap:round}
+.rule-example rect{fill:#a56aff;stroke:#dcc8ff;stroke-width:2}
+.rule-example span{color:var(--ink);font-size:12px;font-weight:600}
+#rulesDialog .rule-warning{color:#d9788e;font-weight:600}
+#rulesDialog form{text-align:center;margin-top:20px}
+@keyframes rules-enter{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:420px){#rulesDialog{padding:20px 14px}.header-actions{gap:5px}.header-actions button{padding:9px}}

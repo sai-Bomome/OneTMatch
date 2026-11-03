@@ -10,7 +10,7 @@ const prefKey='onet.workbench.settings.v1';
 function save(){localStorage.setItem(prefKey,JSON.stringify(Object.fromEntries(['seed','cols','rows','types','mistakeLimit','advance','numbers','paths','pathMode','spawnStyle','spawnDirection','constantSpeed','pathSpeed','headSize','reverseOverlay','iconSet','autoShuffle','theme'].map(k=>[k,$(k).type==='checkbox'?$(k).checked:$(k).value]))));}
 try{const p=JSON.parse(localStorage.getItem(prefKey)||'{}');preferredIconSet=p.iconSet||'primitives';for(const [k,v]of Object.entries(p))if($(k)){if($(k).type==='checkbox')$(k).checked=v;else $(k).value=v;}}catch{}
 const say=text=>$('status').textContent=text;
-function seconds(){return elapsed+(!paused&&!finished?(performance.now()-started)/1000:0);}
+function seconds(){return elapsed+(!paused&&!finished&&!$('rulesDialog').open?(performance.now()-started)/1000:0);}
 function snapshot(){return {cells:[...state],matches,solution:deal.solution.map(p=>({...p})),shuffleCount};}
 function updateMoves(){available=moves(state,deal.cols,deal.rows);}
 function render(){
@@ -38,7 +38,7 @@ function render(){
  const total=state.length/2,cleared=total-state.filter(Boolean).length/2,percent=Math.round(cleared/total*100);
  $('collected').textContent=`${cleared} / ${total}`;$('available').textContent=available.length;$('progressText').textContent=percent+'%';$('progressFill').style.width=percent+'%';
  $('boardTitle').textContent=`${cols} × ${rows} · a little connection`;
- for(const k of ['hint','shuffle','solution'])$(k).disabled=busy||paused||finished; $('undo').disabled=busy||paused||lost||!history.length;$('pause').disabled=busy||finished;
+ for(const k of ['hint','shuffle','solution'])$(k).disabled=busy||paused||finished; $('undo').disabled=busy||paused||lost||!history.length;$('pause').disabled=busy||finished;$('howToPlay').disabled=busy;
  $('pause').textContent=paused?'▷ Resume':'Ⅱ Pause';$('cover').hidden=!paused&&!finished;
  $('lives').textContent=`${Math.max(0,mistakeLimit-mistakes)} / ${mistakeLimit}`;
  $('lives').classList.toggle('low-lives',mistakeLimit-mistakes<=1);
@@ -130,8 +130,12 @@ async function refreshIconPacks(){
 $('iconSet').onchange=()=>{preferredIconSet=$('iconSet').value;updateIconLimit();save();say('Icon set selected. Generate a new board to use it.');};
 $('refreshIcons').onclick=async()=>{try{await refreshIconPacks();say(`Found ${iconPacks.length} icon packs. Choose one, then generate a new board.`);}catch(e){say(e.message);}};
 document.body.classList.toggle('dark',$('theme').value==='dark');$('typeLabel').textContent=$('types').value;
-(async()=>{try{await refreshIconPacks();}catch(e){say(e.message);}newBoard();})();
+(async()=>{try{await refreshIconPacks();}catch(e){say(e.message);}newBoard();try{if(!localStorage.getItem('onet.rules.seen.v1'))showRules();}catch{showRules();}})();
 
 function updatePathControls(){$('pathSpeedValue').textContent=Number($('pathSpeed').value).toFixed(2)+'x';$('headSizeValue').textContent=Math.round(Number($('headSize').value)*100)+'%';}
 for(const k of ['pathSpeed','headSize'])$(k).oninput=()=>{updatePathControls();save();};
 updatePathControls();
+
+function showRules(){if($('rulesDialog').open)return;elapsed=seconds();$('rulesDialog').showModal();}
+$('howToPlay').onclick=showRules;
+$('rulesDialog').addEventListener('close',()=>{started=performance.now();try{localStorage.setItem('onet.rules.seen.v1','1');}catch{}});

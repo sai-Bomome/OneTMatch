@@ -66,3 +66,7 @@ Path speed (0.25x-3x) and head size (50%-250%) sliders are in Display & play. Bo
 Tile reveal direction controls the stagger separately from the spawn style: center/edges, inward/outward spirals, horizontal, vertical, and four diagonals. Saved locally; applies to new boards, replay and shuffle.
 
 After a successful match leaves three or fewer pairs, remaining legal pairs auto-clear sequentially with the selected path animation. Blocked pairs remain; each automatic match can be undone.
+
+Default settings: seed 1083, 8x8, 30 colored primitive types, 5 wrong moves, advance seed on. Pop wave with center-to-edges reveal, draw-then-shrink path, 2.5x speed, 90% head size, constant speed on, Evening Garden. Type numbers, reverse overlay, and auto-shuffle off. Existing saved browser preferences take precedence.
+
+First-time visitors see a rules dialog with 0/1/2-turn connection examples. Dismissal is remembered locally; How to play reopens it. The play timer stops while the dialog is open.
